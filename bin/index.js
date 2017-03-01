@@ -22,4 +22,8 @@ program.command('parse').description('parse psd file').option('-p, --path', 'pat
     (0, _h5parser.parse)(path);
 });
 
+program.command('sources').description('Arrange the source files').action(function (options) {
+    (0, _h5parser.sources)();
+});
+
 program.parse(process.argv);

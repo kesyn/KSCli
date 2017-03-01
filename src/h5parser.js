@@ -133,7 +133,7 @@ export function parse(dir){
         console.log("Files Compressed");
         sources();
         //fs.writeFileSync("packages.js", packagesjsFileContent);
-        console.log("packages file complete");
+
     });
 
 }
@@ -146,5 +146,5 @@ export function sources(){
     }
     var packagesjsFileContent = "var files = " + JSON.stringify(packages);
     fs.writeFileSync("packages.js", packagesjsFileContent);
-
+    console.log("Arrange packages file complete");
 }
