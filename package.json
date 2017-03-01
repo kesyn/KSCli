@@ -15,5 +15,11 @@
   "bugs": {
     "url": "https://github.com/kesyn/KSCli/issues"
   },
-  "homepage": "https://github.com/kesyn/KSCli#readme"
+  "homepage": "https://github.com/kesyn/KSCli#readme",
+  "dependencies": {
+    "del": "^2.2.2",
+    "glob": "^7.1.1",
+    "pinyin": "^2.8.0",
+    "psd": "^3.1.0"
+  }
 }
