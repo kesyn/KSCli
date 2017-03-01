@@ -66,6 +66,14 @@ export function parse(dir){
             }
             imgInfo.x = layerInfo.left;
             imgInfo.y = layerInfo.top;
+            imgInfo.cx = false;
+            imgInfo.cy = false;
+            imgInfo.bottom = false;
+            imgInfo.right = false;
+            imgInfo.alpha = 0;
+            imgInfo.scale = 1;
+            imgInfo.per = 1;
+            imgInfo.backcolor = 'transparent';
             for(var i = 1; i<parts.length-1;i++){
                 var p = parts[i];
 
@@ -135,6 +143,7 @@ export function parse(dir){
         //fs.writeFileSync("packages.js", packagesjsFileContent);
 
     });
+    codes();
 
 }
 export function sources(){
@@ -147,4 +156,70 @@ export function sources(){
     var packagesjsFileContent = "var files = " + JSON.stringify(packages);
     fs.writeFileSync("packages.js", packagesjsFileContent);
     console.log("Arrange packages file complete");
+}
+export function codes(pagename){
+    var jsonfile = "./pages.json";
+    var json = fs.readFileSync(jsonfile, 'utf-8');
+    var pages = JSON.parse(json);
+    for(var page of pages){
+        if(pagename){
+            if(pagename != page.pageName){
+                continue;
+            }
+        }
+        var html = "";
+        var js = "";
+        for(var img of page.images){
+            var position = {
+                x: img.x,
+                y: img.y,
+                alpha: img.alpha,
+                cx: img.cx,
+                cy: img.cy,
+                bottom: img.bottom,
+                right: img.right,
+                scale: img.scale,
+                per: img.per,
+                backcolor: img.backcolor
+            };
+            var ani = [{d:0.5,i:1,t:"'fadeIn'", c:"'in'"}];
+            html += `    <!-- ${img.comment} -->
+`;
+            html += `    <img src="sources/${img.fileName}" 
+        position="${JSON.stringify(position).replace(/\"/g, "")}" 
+        ani="${JSON.stringify(ani).replace(/\"/g, "")}"
+        class="${img.name}"
+        id="${page.pageName}-${img.name}"
+        />\n`
+            if(img.button){
+                js += `\/\/${img.comment} 点击事件\n`
+                js += `        KSApp.tools.on("#${page.pageName}-${img.name}","touchstart", function(){
+                
+        });`
+            }
+        }
+        var viewStr = `<div id="${page.pageName}" class="full">
+${html} 
+</div>`;
+        var jsStr = `var ${pagename} = function () {
+    this.load = function () {
+        ${js}
+        KSApp.swipeup = function () {
+            
+        };
+        KSApp.swipedown = function () {
+            
+        };
+    };
+};`;
+        if(!fs.existsSync("views")){
+            fs.mkdirSync("views/");
+        }
+
+        if(!fs.existsSync("controllers")){
+            fs.mkdirSync("controllers/");
+        }
+        fs.writeFileSync(`controllers/${page.pageName}.js`, jsStr);
+        fs.writeFileSync(`views/${page.pageName}.html`, viewStr);
+    }
 }

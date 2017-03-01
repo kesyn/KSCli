@@ -9,6 +9,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.parse = parse;
 exports.sources = sources;
+exports.codes = codes;
 
 var _glob = require('glob');
 
@@ -129,6 +130,14 @@ function parse(dir) {
                     };
                     imgInfo.x = layerInfo.left;
                     imgInfo.y = layerInfo.top;
+                    imgInfo.cx = false;
+                    imgInfo.cy = false;
+                    imgInfo.bottom = false;
+                    imgInfo.right = false;
+                    imgInfo.alpha = 0;
+                    imgInfo.scale = 1;
+                    imgInfo.per = 1;
+                    imgInfo.backcolor = 'transparent';
                     for (var i = 1; i < parts.length - 1; i++) {
                         var p = parts[i];
 
@@ -222,6 +231,7 @@ function parse(dir) {
         sources();
         //fs.writeFileSync("packages.js", packagesjsFileContent);
     });
+    codes();
 }
 function sources() {
     var packages = [];
@@ -255,4 +265,93 @@ function sources() {
     var packagesjsFileContent = "var files = " + JSON.stringify(packages);
     _fs2.default.writeFileSync("packages.js", packagesjsFileContent);
     console.log("Arrange packages file complete");
+}
+function codes(pagename) {
+    var jsonfile = "./pages.json";
+    var json = _fs2.default.readFileSync(jsonfile, 'utf-8');
+    var pages = JSON.parse(json);
+    var _iteratorNormalCompletion5 = true;
+    var _didIteratorError5 = false;
+    var _iteratorError5 = undefined;
+
+    try {
+        for (var _iterator5 = pages[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
+            var page = _step5.value;
+
+            if (pagename) {
+                if (pagename != page.pageName) {
+                    continue;
+                }
+            }
+            var html = "";
+            var js = "";
+            var _iteratorNormalCompletion6 = true;
+            var _didIteratorError6 = false;
+            var _iteratorError6 = undefined;
+
+            try {
+                for (var _iterator6 = page.images[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
+                    var img = _step6.value;
+
+                    var position = {
+                        x: img.x,
+                        y: img.y,
+                        alpha: img.alpha,
+                        cx: img.cx,
+                        cy: img.cy,
+                        bottom: img.bottom,
+                        right: img.right,
+                        scale: img.scale,
+                        per: img.per,
+                        backcolor: img.backcolor
+                    };
+                    var ani = [{ d: 0.5, i: 1, t: "'fadeIn'", c: "'in'" }];
+                    html += '    <!-- ' + img.comment + ' -->\n';
+                    html += '    <img src="sources/' + img.fileName + '" \n        position="' + JSON.stringify(position).replace(/\"/g, "") + '" \n        ani="' + JSON.stringify(ani).replace(/\"/g, "") + '"\n        class="' + img.name + '"\n        id="' + page.pageName + '-' + img.name + '"\n        />\n';
+                    if (img.button) {
+                        js += '//' + img.comment + ' \u70B9\u51FB\u4E8B\u4EF6\n';
+                        js += '        KSApp.tools.on("#' + page.pageName + '-' + img.name + '","touchstart", function(){\n                \n        });';
+                    }
+                }
+            } catch (err) {
+                _didIteratorError6 = true;
+                _iteratorError6 = err;
+            } finally {
+                try {
+                    if (!_iteratorNormalCompletion6 && _iterator6.return) {
+                        _iterator6.return();
+                    }
+                } finally {
+                    if (_didIteratorError6) {
+                        throw _iteratorError6;
+                    }
+                }
+            }
+
+            var viewStr = '<div id="' + page.pageName + '" class="full">\n' + html + ' \n</div>';
+            var jsStr = 'var ' + pagename + ' = function () {\n    this.load = function () {\n        ' + js + '\n        KSApp.swipeup = function () {\n            \n        };\n        KSApp.swipedown = function () {\n            \n        };\n    };\n};';
+            if (!_fs2.default.existsSync("views")) {
+                _fs2.default.mkdirSync("views/");
+            }
+
+            if (!_fs2.default.existsSync("controllers")) {
+                _fs2.default.mkdirSync("controllers/");
+            }
+            _fs2.default.writeFileSync('controllers/' + page.pageName + '.js', jsStr);
+            _fs2.default.writeFileSync('views/' + page.pageName + '.html', viewStr);
+        }
+    } catch (err) {
+        _didIteratorError5 = true;
+        _iteratorError5 = err;
+    } finally {
+        try {
+            if (!_iteratorNormalCompletion5 && _iterator5.return) {
+                _iterator5.return();
+            }
+        } finally {
+            if (_didIteratorError5) {
+                throw _iteratorError5;
+            }
+        }
+    }
 }
