@@ -26,8 +26,15 @@ program.command('sources').description('Arrange the source files').action(functi
     (0, _h5parser.sources)();
 });
 
+program.command('framework').description('Download framework files').action(function () {
+    (0, _h5parser.framework)();
+});
+
 program.command('codes').description('write codes').option('-p, --pagename', 'path of psd files').action(function (options) {
     (0, _h5parser.codes)(options);
+});
+program.command('clean').description('Clean solutions').action(function (options) {
+    (0, _h5parser.clean)();
 });
 
 program.parse(process.argv);

@@ -9,6 +9,11 @@ import fs from 'fs';
 var pinyin = require('pinyin')
 var sizeOf = require('image-size');
 const imagemin = require('imagemin');
+var request = require('request');
+var unzip = require('unzip');
+var https = require('https');
+var AdmZip = require('adm-zip');
+var copydir = require('copy-dir');
 const imageminOptipng = require('imagemin-optipng');
 import _ from 'lodash'
 import * as PSD from 'psd'
@@ -27,6 +32,11 @@ var deleteFolder = module.exports.deleteFolder= function(path) {
         fs.rmdirSync(path);
     }
 };
+var deleteFile = function(path){
+    if(fs.existsSync(path)) {
+        fs.unlinkSync(path);
+    }
+}
 export function parse(dir){
     var files = glob.sync(dir);
     var packages = [];
@@ -73,7 +83,7 @@ export function parse(dir){
             imgInfo.alpha = 0;
             imgInfo.scale = 1;
             imgInfo.per = 1;
-            imgInfo.backcolor = 'transparent';
+            imgInfo.backcolor = "'transparent'";
             for(var i = 1; i<parts.length-1;i++){
                 var p = parts[i];
 
@@ -144,7 +154,7 @@ export function parse(dir){
 
     });
     codes();
-
+    framework();
 }
 export function sources(){
     var packages = [];
@@ -158,6 +168,9 @@ export function sources(){
     console.log("Arrange packages file complete");
 }
 export function codes(pagename){
+    if(pagename&&pagename.length == null){
+        pagename = null;
+    }
     var jsonfile = "./pages.json";
     var json = fs.readFileSync(jsonfile, 'utf-8');
     var pages = JSON.parse(json);
@@ -209,7 +222,7 @@ export function codes(pagename){
         var viewStr = `<div id="${page.pageName}" class="full">
 ${html} 
 </div>`;
-        var jsStr = `var ${pagename} = function () {
+        var jsStr = `var ${page.pageName} = function () {
     this.load = function () {
         ${js}
         KSApp.swipeup = function () {
@@ -229,8 +242,58 @@ ${html}
         }
         fs.writeFileSync(`controllers/${page.pageName}.js`, jsStr);
         fs.writeFileSync(`views/${page.pageName}.html`, viewStr);
+        console.log(viewStr);
     }
     screens[0].start = true;
     var screenStr = `var screens = ${JSON.stringify(screens)}`;
     fs.writeFileSync("screens.js", screenStr);
+
+}
+
+export function framework(){
+    deleteFolder("tmp");
+    if(!fs.existsSync("tmp")){
+        fs.mkdirSync("tmp");
+    }
+    var tmpFilePath = 'tmp/framework.zip'
+    https.get("https://coding.net/u/kesyn/p/positional/git/archive/master", function(response) {
+        response.on('data', function (data) {
+            fs.appendFileSync(tmpFilePath, data)
+        });
+        response.on('end', function() {
+            var zip = new AdmZip(tmpFilePath)
+            zip.extractAllTo("tmp/");
+            console.log("extracted");
+            setTimeout(()=>{
+                copydir('tmp/positional-master/', './', ()=>{
+                    return true
+                    //console.log("copy complete")
+                }, ()=>{
+                    console.log("copy complete");
+                    deleteFolder("tmp")
+                });
+            }, 2000);
+
+            //fs.unlink(tmpFilePath)
+        })
+    });
+}
+
+export function clean(){
+    deleteFolder("controllers")
+    deleteFolder("css")
+    deleteFolder("js")
+    deleteFolder("sources")
+    deleteFolder("views")
+    deleteFolder("dist")
+    deleteFile("cache.appcache")
+    deleteFile("gulpfile.babel.js")
+    deleteFile("index.html")
+    deleteFile("package.json")
+    deleteFile("packages.js")
+    deleteFile("pages.json")
+    deleteFile("README.md")
+    deleteFile("screens.js")
+    deleteFile(".gitignore")
+    deleteFile(".babelrc")
 }

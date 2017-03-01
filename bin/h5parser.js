@@ -10,6 +10,8 @@ Object.defineProperty(exports, "__esModule", {
 exports.parse = parse;
 exports.sources = sources;
 exports.codes = codes;
+exports.framework = framework;
+exports.clean = clean;
 
 var _glob = require('glob');
 
@@ -34,6 +36,11 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var pinyin = require('pinyin');
 var sizeOf = require('image-size');
 var imagemin = require('imagemin');
+var request = require('request');
+var unzip = require('unzip');
+var https = require('https');
+var AdmZip = require('adm-zip');
+var copydir = require('copy-dir');
 var imageminOptipng = require('imagemin-optipng');
 
 var deleteFolder = module.exports.deleteFolder = function (path) {
@@ -51,6 +58,11 @@ var deleteFolder = module.exports.deleteFolder = function (path) {
             }
         });
         _fs2.default.rmdirSync(path);
+    }
+};
+var deleteFile = function deleteFile(path) {
+    if (_fs2.default.existsSync(path)) {
+        _fs2.default.unlinkSync(path);
     }
 };
 function parse(dir) {
@@ -137,7 +149,7 @@ function parse(dir) {
                     imgInfo.alpha = 0;
                     imgInfo.scale = 1;
                     imgInfo.per = 1;
-                    imgInfo.backcolor = 'transparent';
+                    imgInfo.backcolor = "'transparent'";
                     for (var i = 1; i < parts.length - 1; i++) {
                         var p = parts[i];
 
@@ -232,6 +244,7 @@ function parse(dir) {
         //fs.writeFileSync("packages.js", packagesjsFileContent);
     });
     codes();
+    framework();
 }
 function sources() {
     var packages = [];
@@ -267,6 +280,9 @@ function sources() {
     console.log("Arrange packages file complete");
 }
 function codes(pagename) {
+    if (pagename && pagename.length == null) {
+        pagename = null;
+    }
     var jsonfile = "./pages.json";
     var json = _fs2.default.readFileSync(jsonfile, 'utf-8');
     var pages = JSON.parse(json);
@@ -337,7 +353,7 @@ function codes(pagename) {
             }
 
             var viewStr = '<div id="' + page.pageName + '" class="full">\n' + html + ' \n</div>';
-            var jsStr = 'var ' + pagename + ' = function () {\n    this.load = function () {\n        ' + js + '\n        KSApp.swipeup = function () {\n            \n        };\n        KSApp.swipedown = function () {\n            \n        };\n    };\n};';
+            var jsStr = 'var ' + page.pageName + ' = function () {\n    this.load = function () {\n        ' + js + '\n        KSApp.swipeup = function () {\n            \n        };\n        KSApp.swipedown = function () {\n            \n        };\n    };\n};';
             if (!_fs2.default.existsSync("views")) {
                 _fs2.default.mkdirSync("views/");
             }
@@ -347,6 +363,7 @@ function codes(pagename) {
             }
             _fs2.default.writeFileSync('controllers/' + page.pageName + '.js', jsStr);
             _fs2.default.writeFileSync('views/' + page.pageName + '.html', viewStr);
+            console.log(viewStr);
         }
     } catch (err) {
         _didIteratorError5 = true;
@@ -366,4 +383,52 @@ function codes(pagename) {
     screens[0].start = true;
     var screenStr = 'var screens = ' + JSON.stringify(screens);
     _fs2.default.writeFileSync("screens.js", screenStr);
+}
+
+function framework() {
+    deleteFolder("tmp");
+    if (!_fs2.default.existsSync("tmp")) {
+        _fs2.default.mkdirSync("tmp");
+    }
+    var tmpFilePath = 'tmp/framework.zip';
+    https.get("https://coding.net/u/kesyn/p/positional/git/archive/master", function (response) {
+        response.on('data', function (data) {
+            _fs2.default.appendFileSync(tmpFilePath, data);
+        });
+        response.on('end', function () {
+            var zip = new AdmZip(tmpFilePath);
+            zip.extractAllTo("tmp/");
+            console.log("extracted");
+            setTimeout(function () {
+                copydir('tmp/positional-master/', './', function () {
+                    return true;
+                    //console.log("copy complete")
+                }, function () {
+                    console.log("copy complete");
+                    deleteFolder("tmp");
+                });
+            }, 2000);
+
+            //fs.unlink(tmpFilePath)
+        });
+    });
+}
+
+function clean() {
+    deleteFolder("controllers");
+    deleteFolder("css");
+    deleteFolder("js");
+    deleteFolder("sources");
+    deleteFolder("views");
+    deleteFolder("dist");
+    deleteFile("cache.appcache");
+    deleteFile("gulpfile.babel.js");
+    deleteFile("index.html");
+    deleteFile("package.json");
+    deleteFile("packages.js");
+    deleteFile("pages.json");
+    deleteFile("README.md");
+    deleteFile("screens.js");
+    deleteFile(".gitignore");
+    deleteFile(".babelrc");
 }
