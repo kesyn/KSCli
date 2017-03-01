@@ -7,7 +7,7 @@
 "use strict";
 
 var program = require('commander');
-import {parse, sources} from './h5parser'
+import {parse, sources, codes} from './h5parser'
 
 program.version('1.0.0');
 program.command('parse')
@@ -26,6 +26,13 @@ program.command('sources')
     .description('Arrange the source files')
     .action((options)=>{
         sources();
+    })
+
+program.command('codes')
+    .description('write codes')
+    .option('-p, --pagename', 'path of psd files')
+    .action((options)=>{
+        codes(options);
     })
 
 program.parse(process.argv);
