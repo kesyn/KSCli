@@ -161,7 +161,15 @@ export function codes(pagename){
     var jsonfile = "./pages.json";
     var json = fs.readFileSync(jsonfile, 'utf-8');
     var pages = JSON.parse(json);
+    var screens = [];
     for(var page of pages){
+        screens.push({
+            page: `views/${page.pageName}.html`,
+            id: `${page.pageName}`,
+            controller: `controllers/${page.pageName}.js`,
+            start: false,
+            type: 'page'
+        });
         if(pagename){
             if(pagename != page.pageName){
                 continue;
@@ -222,4 +230,7 @@ ${html}
         fs.writeFileSync(`controllers/${page.pageName}.js`, jsStr);
         fs.writeFileSync(`views/${page.pageName}.html`, viewStr);
     }
+    screens[0].start = true;
+    var screenStr = `var screens = ${JSON.stringify(screens)}`;
+    fs.writeFileSync("screens.js", screenStr);
 }

@@ -270,6 +270,7 @@ function codes(pagename) {
     var jsonfile = "./pages.json";
     var json = _fs2.default.readFileSync(jsonfile, 'utf-8');
     var pages = JSON.parse(json);
+    var screens = [];
     var _iteratorNormalCompletion5 = true;
     var _didIteratorError5 = false;
     var _iteratorError5 = undefined;
@@ -278,6 +279,13 @@ function codes(pagename) {
         for (var _iterator5 = pages[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
             var page = _step5.value;
 
+            screens.push({
+                page: 'views/' + page.pageName + '.html',
+                id: '' + page.pageName,
+                controller: 'controllers/' + page.pageName + '.js',
+                start: false,
+                type: 'page'
+            });
             if (pagename) {
                 if (pagename != page.pageName) {
                     continue;
@@ -354,4 +362,8 @@ function codes(pagename) {
             }
         }
     }
+
+    screens[0].start = true;
+    var screenStr = 'var screens = ' + JSON.stringify(screens);
+    _fs2.default.writeFileSync("screens.js", screenStr);
 }
