@@ -59,7 +59,7 @@ export function parse(dir){
         for(var layer of psd.tree().descendants()){
             //console.log(layer.export());
             var layerInfo = layer.export();
-
+            var animation = [{d:0.5,i:1,t:`'fadeIn'`,c:`'in'`}];
             var parts = layerInfo.name.replace(".png", "").split('_');
             var py = pinyin(parts[parts.length - 1], {style: pinyin.STYLE_NORMAL, heteronym:false}).map((item, i)=>item[0]);
             var name = "";
@@ -86,7 +86,7 @@ export function parse(dir){
             imgInfo.backcolor = "'transparent'";
             for(var i = 1; i<parts.length-1;i++){
                 var p = parts[i];
-
+                if(p==null)continue;
                 if(p == "b"){
                     imgInfo.bottom = true;
                     imgInfo.y = layerInfo.bottom - 1334;
@@ -115,6 +115,14 @@ export function parse(dir){
                 if(p == "g"){
                     imgInfo.global = true;
                 }
+                if(p.indexOf("animate")>=0){
+                    var parts = p.split('(')[1].split(')')[0].split('-');
+                    animation[0].d = ~~parts[1];
+                    animation[0].i = ~~parts[2];
+                    animation[0].t =`'${parts[0]}'`;
+
+                }
+                imgInfo.animation = animation;
             }
 
             if(imgInfo.global){
@@ -203,7 +211,8 @@ export function codes(pagename){
                 per: img.per,
                 backcolor: img.backcolor
             };
-            var ani = [{d:0.5,i:1,t:"'fadeIn'", c:"'in'"}];
+            var ani = img.animation;
+            //var ani = [{d:0.5,i:1,t:"'fadeIn'", c:"'in'"}];
             html += `    <!-- ${img.comment} -->
 `;
             html += `    <img src="sources/${img.fileName}" 
@@ -242,7 +251,7 @@ ${html}
         }
         fs.writeFileSync(`controllers/${page.pageName}.js`, jsStr);
         fs.writeFileSync(`views/${page.pageName}.html`, viewStr);
-        console.log(viewStr);
+        //console.log(viewStr);
     }
     screens[0].start = true;
     var screenStr = `var screens = ${JSON.stringify(screens)}`;

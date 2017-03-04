@@ -101,7 +101,7 @@ function parse(dir) {
 
                     //console.log(layer.export());
                     var layerInfo = layer.export();
-
+                    var animation = [{ d: 0.5, i: 1, t: '\'fadeIn\'', c: '\'in\'' }];
                     var parts = layerInfo.name.replace(".png", "").split('_');
                     var py = pinyin(parts[parts.length - 1], { style: pinyin.STYLE_NORMAL, heteronym: false }).map(function (item, i) {
                         return item[0];
@@ -152,7 +152,7 @@ function parse(dir) {
                     imgInfo.backcolor = "'transparent'";
                     for (var i = 1; i < parts.length - 1; i++) {
                         var p = parts[i];
-
+                        if (p == null) continue;
                         if (p == "b") {
                             imgInfo.bottom = true;
                             imgInfo.y = layerInfo.bottom - 1334;
@@ -181,6 +181,13 @@ function parse(dir) {
                         if (p == "g") {
                             imgInfo.global = true;
                         }
+                        if (p.indexOf("animate") >= 0) {
+                            var parts = p.split('(')[1].split(')')[0].split('-');
+                            animation[0].d = ~~parts[1];
+                            animation[0].i = ~~parts[2];
+                            animation[0].t = '\'' + parts[0] + '\'';
+                        }
+                        imgInfo.animation = animation;
                     }
 
                     if (imgInfo.global) {
@@ -329,7 +336,8 @@ function codes(pagename) {
                         per: img.per,
                         backcolor: img.backcolor
                     };
-                    var ani = [{ d: 0.5, i: 1, t: "'fadeIn'", c: "'in'" }];
+                    var ani = img.animation;
+                    //var ani = [{d:0.5,i:1,t:"'fadeIn'", c:"'in'"}];
                     html += '    <!-- ' + img.comment + ' -->\n';
                     html += '    <img src="sources/' + img.fileName + '" \n        position="' + JSON.stringify(position).replace(/\"/g, "") + '" \n        ani="' + JSON.stringify(ani).replace(/\"/g, "") + '"\n        class="' + img.name + '"\n        id="' + page.pageName + '-' + img.name + '"\n        />\n';
                     if (img.button) {
@@ -363,7 +371,7 @@ function codes(pagename) {
             }
             _fs2.default.writeFileSync('controllers/' + page.pageName + '.js', jsStr);
             _fs2.default.writeFileSync('views/' + page.pageName + '.html', viewStr);
-            console.log(viewStr);
+            //console.log(viewStr);
         }
     } catch (err) {
         _didIteratorError5 = true;
