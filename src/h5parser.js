@@ -1,7 +1,6 @@
 /**
  * Created by zhangtong from KESYN SOFTWARE on 2017/3/1.
  */
-
 "use strict";
 
 import glob from 'glob'
@@ -13,7 +12,9 @@ var request = require('request');
 var unzip = require('unzip');
 var https = require('https');
 var AdmZip = require('adm-zip');
+var beautify = require('js-beautify').js_beautify;
 var copydir = require('copy-dir');
+const getColors = require('get-image-colors')
 const imageminOptipng = require('imagemin-optipng');
 import _ from 'lodash'
 import * as PSD from 'psd'
@@ -37,7 +38,7 @@ var deleteFile = function(path){
         fs.unlinkSync(path);
     }
 }
-export function parse(dir){
+export async function parse(dir){
     var files = glob.sync(dir);
     var packages = [];
     var globaled = new Map();
@@ -53,13 +54,19 @@ export function parse(dir){
         }
         var psd = PSD.fromFile(file);
         psd.parse();
+        var docHeight = psd.header.height;
         // console.log(psd.tree().export());
         // console.log(psd.tree().export().children[0].image)
         var imgs = [];
+        var pageBackground = "transparent";
         for(var layer of psd.tree().descendants()){
             //console.log(layer.export());
+            if(layer.name.indexOf("_")<0){
+                continue;
+            }
             var layerInfo = layer.export();
             var animation = [{d:0.5,i:1,t:`'fadeIn'`,c:`'in'`}];
+            var code = {};
             var parts = layerInfo.name.replace(".png", "").split('_');
             var py = pinyin(parts[parts.length - 1], {style: pinyin.STYLE_NORMAL, heteronym:false}).map((item, i)=>item[0]);
             var name = "";
@@ -83,13 +90,15 @@ export function parse(dir){
             imgInfo.alpha = 0;
             imgInfo.scale = 1;
             imgInfo.per = 1;
+            imgInfo.bk = false;
+            imgInfo.bf = false;
             imgInfo.backcolor = "'transparent'";
             for(var i = 1; i<parts.length-1;i++){
                 var p = parts[i];
                 if(p==null)continue;
                 if(p == "b"){
                     imgInfo.bottom = true;
-                    imgInfo.y = layerInfo.bottom - 1334;
+                    imgInfo.y = layerInfo.bottom - docHeight;
                 }
                 if(p == "x"){
                     imgInfo.cx = true;
@@ -99,7 +108,7 @@ export function parse(dir){
                     imgInfo.cy = true;
                     //console.log(layerInfo)
                     //console.log((layerInfo.top + layerInfo.bottom)/2)
-                    imgInfo.y = (layerInfo.top + layerInfo.bottom)/2 - 1334/2;
+                    imgInfo.y = (layerInfo.top + layerInfo.bottom)/2 - docHeight/2;
                     //console.log(imgInfo)
                 }
                 if(p == "r"){
@@ -109,6 +118,12 @@ export function parse(dir){
                 if(p == "bt"){
                     imgInfo.button = true;
                 }
+                if(p == "bk"){
+                    imgInfo.bk = true;
+                }
+                if(p=="bf"){
+                    imgInfo.bf = true;
+                }
                 if(p == "f"){
                     imgInfo.full = true;
                 }
@@ -116,17 +131,48 @@ export function parse(dir){
                     imgInfo.global = true;
                 }
                 if(p.indexOf("animate")>=0){
-                    var parts = p.split('(')[1].split(')')[0].split('-');
-                    animation[0].d = ~~parts[1];
-                    animation[0].i = ~~parts[2];
-                    animation[0].t =`'${parts[0]}'`;
-
+                    var ps = p.split('(')[1].split(')')[0].split('-');
+                    if(ps.length>1)
+                    animation[0].d = ~~ps[1];
+                    if(ps.length>2)
+                    animation[0].i = ~~ps[2];
+                    if(ps.length>0)
+                    animation[0].t =`'${ps[0]}'`;
+                    if(ps.length>3)
+                    if(ps[3]=="infinite"){
+                        animation[0].infinite = true;
+                    }
                 }
                 imgInfo.animation = animation;
+                if(p.indexOf("code")>=0){
+                    var ps = p.split('(')[1].split(')')[0].split('~~~~');
+                    if(ps.length>0){
+                        code.codeType = ps[0]
+                    }
+                    if(ps.length>1){
+                        code.code = ps[1]
+                    }
+                }
+                imgInfo.code = code;
             }
-
+            if(imgInfo.bk){
+                deleteFolder("cltmp");
+                if(!fs.existsSync("cltmp")){
+                    fs.mkdirSync("cltmp");
+                }
+                await layer.saveAsPng("cltmp/" + "bk.png");
+                pageBackground = await new Promise((resolve)=>{
+                    getColors("cltmp/" + "bk.png").then(colors=>{
+                        colors = colors.map(color => color.hex());
+                        var index = ~~(colors.length/2);
+                        resolve(colors[index]);
+                    })
+                });
+                deleteFolder("cltmp");
+                continue;
+            }
             if(imgInfo.global){
-                layer.saveAsPng("sources/" + "global-" + imgInfo.name + ".png");
+                await layer.saveAsPng("sources/" + "global-" + imgInfo.name + ".png");
                 imgInfo.fileName = "global-" + imgInfo.name + ".png";
                 if(!globaled.has(imgInfo.fileName)){
                     globaled.set(imgInfo.fileName, "added");
@@ -135,16 +181,18 @@ export function parse(dir){
 
             }
             else {
-                layer.saveAsPng("sources/" + pagename + "-" + imgInfo.name + ".png");
+                await layer.saveAsPng("sources/" + pagename + "-" + imgInfo.name + ".png");
                 imgInfo.fileName = pagename + "-" + imgInfo.name + ".png";
                 packages.push({n: imgInfo.fileName, w: imgInfo.width, h: imgInfo.height})
             }
             imgs.push(imgInfo);
 
         }
+        //console.log(pageBackground);
         pages.push({
             pageName: pagename,
-            images: _.reverse(imgs)
+            images: _.reverse(imgs),
+            bk: pageBackground
         });
     }
     fs.writeFileSync("pages.json", JSON.stringify(pages));
@@ -184,12 +232,13 @@ export function codes(pagename){
     var pages = JSON.parse(json);
     var screens = [];
     for(var page of pages){
+        var pageType = page.pageName.indexOf("page")>=0?'page':'widget';
         screens.push({
             page: `views/${page.pageName}.html`,
             id: `${page.pageName}`,
             controller: `controllers/${page.pageName}.js`,
             start: false,
-            type: 'page'
+            type: pageType
         });
         if(pagename){
             if(pagename != page.pageName){
@@ -215,22 +264,52 @@ export function codes(pagename){
             //var ani = [{d:0.5,i:1,t:"'fadeIn'", c:"'in'"}];
             html += `    <!-- ${img.comment} -->
 `;
-            html += `    <img src="sources/${img.fileName}" 
+            if(!img.bf) {
+                html += `    <img src="sources/${img.fileName}" 
         position="${JSON.stringify(position).replace(/\"/g, "")}" 
         ani="${JSON.stringify(ani).replace(/\"/g, "")}"
         class="${img.name}"
         id="${page.pageName}-${img.name}"
         />\n`
+            }
+            else{
+                html += `    <div style="background-image: url('sources/${img.fileName}');background-size: cover;background-position: center" 
+        position="{width:window.innerWidth, height:window.innerHeight}" 
+        ani="${JSON.stringify(ani).replace(/\"/g, "")}"
+        class="${img.name}"
+        id="${page.pageName}-${img.name}"
+        ></div>\n`
+            }
+            var customJS = ""
+            if(img.code){
+                switch(img.code.codeType){
+                    case "custom":
+                        customJS = img.code.code;
+                        break;
+                    case "open":
+                        customJS = `KSApp.widget.show('${img.code.code}')`;
+                        break;
+                    case "close":
+                        customJS = `KSApp.widget.hide('${img.code.code}')`;
+                        break;
+                    case "jump":
+                        customJS = `KSApp.pageService.gotoPage(${img.code.code})`;
+                        break;
+                }
+            }
             if(img.button){
                 js += `\/\/${img.comment} 点击事件\n`
                 js += `        KSApp.tools.on("#${page.pageName}-${img.name}","touchstart", function(){
-                
-        });`
+                ${customJS}
+        });\n`
             }
         }
-        var viewStr = `<div id="${page.pageName}" class="full">
+        var viewStr = `<div id="${page.pageName}" class="full" style="background-color: ${page.bk}">
 ${html} 
 </div>`;
+        if(pageType=="widget"){
+            js += `        KSApp.${page.pageName} = this;`
+        }
         var jsStr = `var ${page.pageName} = function () {
     this.load = function () {
         ${js}
@@ -242,6 +321,7 @@ ${html}
         };
     };
 };`;
+        jsStr = beautify(jsStr);
         if(!fs.existsSync("views")){
             fs.mkdirSync("views/");
         }
@@ -249,12 +329,14 @@ ${html}
         if(!fs.existsSync("controllers")){
             fs.mkdirSync("controllers/");
         }
-        fs.writeFileSync(`controllers/${page.pageName}.js`, jsStr);
+        if(!fs.existsSync(`controllers/${page.pageName}.js`)) {
+            fs.writeFileSync(`controllers/${page.pageName}.js`, jsStr);
+        }
         fs.writeFileSync(`views/${page.pageName}.html`, viewStr);
         //console.log(viewStr);
     }
     screens[0].start = true;
-    var screenStr = `var screens = ${JSON.stringify(screens)}`;
+    var screenStr = `var screens = ${JSON.stringify(screens)}`.replace(/{/g, "\n{");
     fs.writeFileSync("screens.js", screenStr);
 
 }

@@ -13,13 +13,13 @@ program.version('1.0.0');
 program.command('parse')
     .description('parse psd file')
     .option('-p, --path', 'path of psd files')
-    .action((options)=>{
+    .action(async (options)=>{
         var path = "psd";
         if(options.path){
             path = options.path;
         }
         path += "/*";
-        parse(path);
+        await parse(path);
     })
 
 program.command('sources')
