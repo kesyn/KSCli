@@ -9,7 +9,7 @@
 var program = require('commander');
 import {parse, sources, codes, framework, clean} from './h5parser'
 
-program.version('1.0.0');
+program.version('1.0.5');
 program.command('parse')
     .description('parse psd file')
     .option('-p, --path', 'path of psd files')

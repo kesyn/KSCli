@@ -1,6 +1,6 @@
 {
   "name": "kscli",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "A tool for generate 'Kesyn Positional Framework'",
   "main": "index.js",
   "scripts": {
