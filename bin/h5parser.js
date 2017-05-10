@@ -41,7 +41,7 @@ var parse = exports.parse = function () {
 
                     case 9:
                         if (_iteratorNormalCompletion = (_step = _iterator.next()).done) {
-                            _context.next = 129;
+                            _context.next = 130;
                             break;
                         }
 
@@ -68,7 +68,7 @@ var parse = exports.parse = function () {
 
                     case 23:
                         if (_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done) {
-                            _context.next = 111;
+                            _context.next = 112;
                             break;
                         }
 
@@ -79,7 +79,7 @@ var parse = exports.parse = function () {
                             break;
                         }
 
-                        return _context.abrupt('continue', 108);
+                        return _context.abrupt('continue', 109);
 
                     case 27:
                         layerInfo = layer.export();
@@ -159,7 +159,7 @@ var parse = exports.parse = function () {
 
                     case 66:
                         if (!(i < parts.length - 1)) {
-                            _context.next = 86;
+                            _context.next = 87;
                             break;
                         }
 
@@ -170,7 +170,7 @@ var parse = exports.parse = function () {
                             break;
                         }
 
-                        return _context.abrupt('continue', 83);
+                        return _context.abrupt('continue', 84);
 
                     case 70:
                         if (p == "b") {
@@ -207,14 +207,21 @@ var parse = exports.parse = function () {
                         if (p == "g") {
                             imgInfo.global = true;
                         }
+                        if (p == "noin") {
+                            imgInfo.disableIn = true;
+                        }
                         if (p.indexOf("animate") >= 0) {
-                            ps = p.split('(')[1].split(')')[0].split('-');
+                            if (!imgInfo.disableIn) {
+                                ps = p.split('(')[1].split(')')[0].split('-');
 
-                            if (ps.length > 1) animation[0].d = ~~ps[1];
-                            if (ps.length > 2) animation[0].i = ~~ps[2];
-                            if (ps.length > 0) animation[0].t = '\'' + ps[0] + '\'';
-                            if (ps.length > 3) if (ps[3] == "infinite") {
-                                animation[0].infinite = true;
+                                if (ps.length > 1) animation[0].d = ~~ps[1];
+                                if (ps.length > 2) animation[0].i = ~~ps[2];
+                                if (ps.length > 0) animation[0].t = '\'' + ps[0] + '\'';
+                                if (ps.length > 3) if (ps[3] == "infinite") {
+                                    animation[0].infinite = true;
+                                }
+                            } else {
+                                animation = [];
                             }
                         }
                         imgInfo.animation = animation;
@@ -230,14 +237,14 @@ var parse = exports.parse = function () {
                         }
                         imgInfo.code = code;
 
-                    case 83:
+                    case 84:
                         i++;
                         _context.next = 66;
                         break;
 
-                    case 86:
+                    case 87:
                         if (!imgInfo.bk) {
-                            _context.next = 96;
+                            _context.next = 97;
                             break;
                         }
 
@@ -245,11 +252,11 @@ var parse = exports.parse = function () {
                         if (!_fs2.default.existsSync("cltmp")) {
                             _fs2.default.mkdirSync("cltmp");
                         }
-                        _context.next = 91;
+                        _context.next = 92;
                         return layer.saveAsPng("cltmp/" + "bk.png");
 
-                    case 91:
-                        _context.next = 93;
+                    case 92:
+                        _context.next = 94;
                         return new Promise(function (resolve) {
                             getColors("cltmp/" + "bk.png").then(function (colors) {
                                 colors = colors.map(function (color) {
@@ -260,82 +267,82 @@ var parse = exports.parse = function () {
                             });
                         });
 
-                    case 93:
+                    case 94:
                         pageBackground = _context.sent;
 
                         deleteFolder("cltmp");
-                        return _context.abrupt('continue', 108);
+                        return _context.abrupt('continue', 109);
 
-                    case 96:
+                    case 97:
                         if (!imgInfo.global) {
-                            _context.next = 103;
+                            _context.next = 104;
                             break;
                         }
 
-                        _context.next = 99;
+                        _context.next = 100;
                         return layer.saveAsPng("sources/" + "global-" + imgInfo.name + ".png");
 
-                    case 99:
+                    case 100:
                         imgInfo.fileName = "global-" + imgInfo.name + ".png";
                         if (!globaled.has(imgInfo.fileName)) {
                             globaled.set(imgInfo.fileName, "added");
                             packages.push({ n: imgInfo.fileName, w: imgInfo.width, h: imgInfo.height });
                         }
 
-                        _context.next = 107;
+                        _context.next = 108;
                         break;
 
-                    case 103:
-                        _context.next = 105;
+                    case 104:
+                        _context.next = 106;
                         return layer.saveAsPng("sources/" + pagename + "-" + imgInfo.name + ".png");
 
-                    case 105:
+                    case 106:
                         imgInfo.fileName = pagename + "-" + imgInfo.name + ".png";
                         packages.push({ n: imgInfo.fileName, w: imgInfo.width, h: imgInfo.height });
 
-                    case 107:
+                    case 108:
                         imgs.push(imgInfo);
 
-                    case 108:
+                    case 109:
                         _iteratorNormalCompletion2 = true;
                         _context.next = 23;
                         break;
 
-                    case 111:
-                        _context.next = 117;
+                    case 112:
+                        _context.next = 118;
                         break;
 
-                    case 113:
-                        _context.prev = 113;
+                    case 114:
+                        _context.prev = 114;
                         _context.t1 = _context['catch'](21);
                         _didIteratorError2 = true;
                         _iteratorError2 = _context.t1;
 
-                    case 117:
-                        _context.prev = 117;
+                    case 118:
                         _context.prev = 118;
+                        _context.prev = 119;
 
                         if (!_iteratorNormalCompletion2 && _iterator2.return) {
                             _iterator2.return();
                         }
 
-                    case 120:
-                        _context.prev = 120;
+                    case 121:
+                        _context.prev = 121;
 
                         if (!_didIteratorError2) {
-                            _context.next = 123;
+                            _context.next = 124;
                             break;
                         }
 
                         throw _iteratorError2;
 
-                    case 123:
-                        return _context.finish(120);
-
                     case 124:
-                        return _context.finish(117);
+                        return _context.finish(121);
 
                     case 125:
+                        return _context.finish(118);
+
+                    case 126:
                         //console.log(pageBackground);
                         pages.push({
                             pageName: pagename,
@@ -343,46 +350,46 @@ var parse = exports.parse = function () {
                             bk: pageBackground
                         });
 
-                    case 126:
+                    case 127:
                         _iteratorNormalCompletion = true;
                         _context.next = 9;
                         break;
 
-                    case 129:
-                        _context.next = 135;
+                    case 130:
+                        _context.next = 136;
                         break;
 
-                    case 131:
-                        _context.prev = 131;
+                    case 132:
+                        _context.prev = 132;
                         _context.t2 = _context['catch'](7);
                         _didIteratorError = true;
                         _iteratorError = _context.t2;
 
-                    case 135:
-                        _context.prev = 135;
+                    case 136:
                         _context.prev = 136;
+                        _context.prev = 137;
 
                         if (!_iteratorNormalCompletion && _iterator.return) {
                             _iterator.return();
                         }
 
-                    case 138:
-                        _context.prev = 138;
+                    case 139:
+                        _context.prev = 139;
 
                         if (!_didIteratorError) {
-                            _context.next = 141;
+                            _context.next = 142;
                             break;
                         }
 
                         throw _iteratorError;
 
-                    case 141:
-                        return _context.finish(138);
-
                     case 142:
-                        return _context.finish(135);
+                        return _context.finish(139);
 
                     case 143:
+                        return _context.finish(136);
+
+                    case 144:
                         _fs2.default.writeFileSync("pages.json", JSON.stringify(pages));
                         console.log("Files Cutted");
                         //var packagesjsFileContent = "var files = " + JSON.stringify(packages);
@@ -397,12 +404,12 @@ var parse = exports.parse = function () {
                         codes();
                         framework();
 
-                    case 148:
+                    case 149:
                     case 'end':
                         return _context.stop();
                 }
             }
-        }, _callee, this, [[7, 131, 135, 143], [21, 113, 117, 125], [36, 40, 44, 52], [45,, 47, 51], [118,, 120, 124], [136,, 138, 142]]);
+        }, _callee, this, [[7, 132, 136, 144], [21, 114, 118, 126], [36, 40, 44, 52], [45,, 47, 51], [119,, 121, 125], [137,, 139, 143]]);
     }));
 
     return function parse(_x) {

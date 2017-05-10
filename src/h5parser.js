@@ -130,17 +130,25 @@ export async function parse(dir){
                 if(p == "g"){
                     imgInfo.global = true;
                 }
+                if(p=="noin"){
+                    imgInfo.disableIn = true;
+                }
                 if(p.indexOf("animate")>=0){
-                    var ps = p.split('(')[1].split(')')[0].split('-');
-                    if(ps.length>1)
-                    animation[0].d = ~~ps[1];
-                    if(ps.length>2)
-                    animation[0].i = ~~ps[2];
-                    if(ps.length>0)
-                    animation[0].t =`'${ps[0]}'`;
-                    if(ps.length>3)
-                    if(ps[3]=="infinite"){
-                        animation[0].infinite = true;
+                    if(!imgInfo.disableIn) {
+                        var ps = p.split('(')[1].split(')')[0].split('-');
+                        if (ps.length > 1)
+                            animation[0].d = ~~ps[1];
+                        if (ps.length > 2)
+                            animation[0].i = ~~ps[2];
+                        if (ps.length > 0)
+                            animation[0].t = `'${ps[0]}'`;
+                        if (ps.length > 3)
+                            if (ps[3] == "infinite") {
+                                animation[0].infinite = true;
+                            }
+                    }
+                    else{
+                        animation = [];
                     }
                 }
                 imgInfo.animation = animation;
