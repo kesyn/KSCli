@@ -34,6 +34,5 @@ jspm_packages
 .npm
 
 demo
-
 # Optional REPL history
 .node_repl_history

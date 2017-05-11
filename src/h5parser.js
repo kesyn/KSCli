@@ -59,6 +59,18 @@ export async function parse(dir){
         // console.log(psd.tree().export().children[0].image)
         var imgs = [];
         var pageBackground = "transparent";
+        // if(pagename=="page2"){
+        //     var layer = (_.find(psd.tree().descendants(), c=>{
+        //         // c.export();
+        //         return c.name.indexOf("距离IP7还有:100分")>=0;
+        //     }));
+        //     console.log(layer);
+        //     process.abort();
+        // }
+        // else
+        // {
+        //     continue;
+        // }
         for(var layer of psd.tree().descendants()){
             //console.log(layer.export());
             if(layer.name.indexOf("_")<0){
@@ -91,6 +103,8 @@ export async function parse(dir){
             imgInfo.scale = 1;
             imgInfo.per = 1;
             imgInfo.bk = false;
+            imgInfo.input = false;
+            imgInfo.txt = false;
             imgInfo.bf = false;
             imgInfo.backcolor = "'transparent'";
             for(var i = 1; i<parts.length-1;i++){
@@ -121,6 +135,12 @@ export async function parse(dir){
                 if(p == "bk"){
                     imgInfo.bk = true;
                 }
+                if(p=="ip"){
+                    imgInfo.input = true;
+                }
+                if(p=="txt"){
+                    imgInfo.txt = true;
+                }
                 if(p=="bf"){
                     imgInfo.bf = true;
                 }
@@ -132,23 +152,59 @@ export async function parse(dir){
                 }
                 if(p=="noin"){
                     imgInfo.disableIn = true;
+                }if(p=="noin"){
+                    imgInfo.disableIn = true;
                 }
                 if(p.indexOf("animate")>=0){
-                    if(!imgInfo.disableIn) {
+                    var inAnimation = _.find(animation, c=>c.c==`'in'`)
+                    if(!imgInfo.disableIn){
+                        if(!inAnimation){
+                            inAnimation = {};
+                            animation.push(inAnimation);
+                        }
                         var ps = p.split('(')[1].split(')')[0].split('-');
                         if (ps.length > 1)
-                            animation[0].d = ~~ps[1];
+                            inAnimation.d = ~~ps[1];
                         if (ps.length > 2)
-                            animation[0].i = ~~ps[2];
+                            inAnimation.i = ~~ps[2];
                         if (ps.length > 0)
-                            animation[0].t = `'${ps[0]}'`;
+                            inAnimation.t = `'${ps[0]}'`;
                         if (ps.length > 3)
                             if (ps[3] == "infinite") {
-                                animation[0].infinite = true;
+                                inAnimation.infinite = true;
                             }
+                        inAnimation.c = `'in'`
                     }
                     else{
-                        animation = [];
+                        _.remove(animation, c=>c.c==`'in'`)
+                    }
+                }
+                if(p.indexOf("waitanimate")>=0){
+                    var waitAnimation = _.find(animation, c=>c.c==`'out'`)
+                    if(!imgInfo.disableIn){
+                        if(!waitAnimation){
+                            waitAnimation = {};
+                            animation.push(waitAnimation);
+                        }
+                        var ps = p.split('(')[1].split(')')[0].split('-');
+                        if (ps.length > 1)
+                            waitAnimation.d = ~~ps[1];
+                        if (ps.length > 2)
+                            waitAnimation.i = ~~ps[2];
+                        if (ps.length > 0)
+                            waitAnimation.t = `'${ps[0]}'`;
+                        if (ps.length > 3)
+                            if (ps[3] == "infinite") {
+                                waitAnimation.infinite = true;
+                            }
+                        if (ps.length > 4)
+                            if (ps[4] != "") {
+                                waitAnimation.id = ps[4];
+                            }
+                        waitAnimation.c =`'out'`
+                    }
+                    else{
+                        _.remove(animation, c=>c.c==`'out'`)
                     }
                 }
                 imgInfo.animation = animation;
@@ -179,6 +235,29 @@ export async function parse(dir){
                 deleteFolder("cltmp");
                 continue;
             }
+            if(imgInfo.input){
+                deleteFolder("cltmp");
+                if(!fs.existsSync("cltmp")){
+                    fs.mkdirSync("cltmp");
+                }
+
+                await layer.saveAsPng("cltmp/input.png");
+                var inputColor = await new Promise((resolve)=>{
+                    getColors("cltmp/" + "input.png").then(colors=>{
+                        colors = colors.map(color => color.hex());
+                        var index = ~~(colors.length/2);
+                        resolve(colors[index]);
+                    })
+                });
+                imgInfo.inputColor = inputColor;
+                imgInfo.inputSize = sizeOf("cltmp/input.png")
+                deleteFolder("cltmp");
+                imgs.push(imgInfo);
+                continue;
+            }
+            if(imgInfo.txt){
+                imgInfo.layer = layer.export();
+            }
             if(imgInfo.global){
                 await layer.saveAsPng("sources/" + "global-" + imgInfo.name + ".png");
                 imgInfo.fileName = "global-" + imgInfo.name + ".png";
@@ -186,7 +265,6 @@ export async function parse(dir){
                     globaled.set(imgInfo.fileName, "added");
                     packages.push({n: imgInfo.fileName, w: imgInfo.width, h: imgInfo.height})
                 }
-
             }
             else {
                 await layer.saveAsPng("sources/" + pagename + "-" + imgInfo.name + ".png");
@@ -194,7 +272,6 @@ export async function parse(dir){
                 packages.push({n: imgInfo.fileName, w: imgInfo.width, h: imgInfo.height})
             }
             imgs.push(imgInfo);
-
         }
         //console.log(pageBackground);
         pages.push({
@@ -273,12 +350,25 @@ export function codes(pagename){
             html += `    <!-- ${img.comment} -->
 `;
             if(!img.bf) {
-                html += `    <img src="sources/${img.fileName}" 
+                if(img.input){
+                    position.width = img.inputSize.width;
+                    position.height = img.inputSize.height;
+                    html += `    <input 
+        position="${JSON.stringify(position).replace(/\"/g, "")}" 
+        ani="${JSON.stringify(ani).replace(/\"/g, "")}"
+        class="${img.name}"
+        id="${page.pageName}-${img.name}"
+        style="padding:0;border:0;line-height:${position.height+"px"};font-size: ${(position.height-5)+"px"}; color:${img.inputColor}"
+        />\n`
+                }
+                else {
+                    html += `    <img src="sources/${img.fileName}" 
         position="${JSON.stringify(position).replace(/\"/g, "")}" 
         ani="${JSON.stringify(ani).replace(/\"/g, "")}"
         class="${img.name}"
         id="${page.pageName}-${img.name}"
         />\n`
+                }
             }
             else{
                 html += `    <div style="background-image: url('sources/${img.fileName}');background-size: cover;background-position: center" 
@@ -287,6 +377,18 @@ export function codes(pagename){
         class="${img.name}"
         id="${page.pageName}-${img.name}"
         ></div>\n`
+            }
+            if(img.txt){
+                position.width = img.layer.width;
+                position.height = img.layer.height;
+                html += `    <div 
+        style="font-size: ${img.layer.text.font.sizes[0]+"px"}; line-height: 1; color:rgba(${img.layer.text.font.colors[0][0]},${img.layer.text.font.colors[0][1]},${img.layer.text.font.colors[0][2]},${img.layer.text.font.colors[0][3]/255})"
+        position="${JSON.stringify(position).replace(/\"/g, "")}" 
+        ani="${JSON.stringify(ani).replace(/\"/g, "")}"
+        class="${img.name}"
+        id="${page.pageName}-${img.name}-text"
+        fontInfo="${JSON.stringify(img.layer.text.font.sizes)}-${JSON.stringify(img.layer.text.font.colors)}"
+        >${img.layer.text.value}</div>\n`
             }
             var customJS = ""
             if(img.code){
@@ -302,6 +404,11 @@ export function codes(pagename){
                         break;
                     case "jump":
                         customJS = `KSApp.pageService.gotoPage(${img.code.code})`;
+                        break;
+                    case "animate":
+                        customJS = `KSApp.animator.runWaitAnimation('.${img.name}', null, function () {
+
+                }, false);`;
                         break;
                 }
             }

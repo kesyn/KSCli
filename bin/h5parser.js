@@ -18,7 +18,7 @@ var _asyncToGenerator3 = _interopRequireDefault(_asyncToGenerator2);
 
 var parse = exports.parse = function () {
     var _ref = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee(dir) {
-        var files, packages, globaled, pages, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, file, pagename, psd, docHeight, imgs, pageBackground, _iteratorNormalCompletion2, _didIteratorError2, _iteratorError2, _iterator2, _step2, layer, layerInfo, animation, code, parts, py, name, _iteratorNormalCompletion3, _didIteratorError3, _iteratorError3, _iterator3, _step3, p, imgInfo, i, ps;
+        var files, packages, globaled, pages, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, file, pagename, psd, docHeight, imgs, pageBackground, _iteratorNormalCompletion2, _didIteratorError2, _iteratorError2, _iterator2, _step2, layer, layerInfo, animation, code, parts, py, name, _iteratorNormalCompletion3, _didIteratorError3, _iteratorError3, _iterator3, _step3, p, imgInfo, i, inAnimation, ps, waitAnimation, inputColor;
 
         return _regenerator2.default.wrap(function _callee$(_context) {
             while (1) {
@@ -41,7 +41,7 @@ var parse = exports.parse = function () {
 
                     case 9:
                         if (_iteratorNormalCompletion = (_step = _iterator.next()).done) {
-                            _context.next = 130;
+                            _context.next = 150;
                             break;
                         }
 
@@ -60,6 +60,19 @@ var parse = exports.parse = function () {
 
                         imgs = [];
                         pageBackground = "transparent";
+                        // if(pagename=="page2"){
+                        //     var layer = (_.find(psd.tree().descendants(), c=>{
+                        //         // c.export();
+                        //         return c.name.indexOf("距离IP7还有:100分")>=0;
+                        //     }));
+                        //     console.log(layer);
+                        //     process.abort();
+                        // }
+                        // else
+                        // {
+                        //     continue;
+                        // }
+
                         _iteratorNormalCompletion2 = true;
                         _didIteratorError2 = false;
                         _iteratorError2 = undefined;
@@ -68,7 +81,7 @@ var parse = exports.parse = function () {
 
                     case 23:
                         if (_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done) {
-                            _context.next = 112;
+                            _context.next = 132;
                             break;
                         }
 
@@ -79,7 +92,7 @@ var parse = exports.parse = function () {
                             break;
                         }
 
-                        return _context.abrupt('continue', 109);
+                        return _context.abrupt('continue', 129);
 
                     case 27:
                         layerInfo = layer.export();
@@ -153,26 +166,28 @@ var parse = exports.parse = function () {
                         imgInfo.scale = 1;
                         imgInfo.per = 1;
                         imgInfo.bk = false;
+                        imgInfo.input = false;
+                        imgInfo.txt = false;
                         imgInfo.bf = false;
                         imgInfo.backcolor = "'transparent'";
                         i = 1;
 
-                    case 66:
+                    case 68:
                         if (!(i < parts.length - 1)) {
-                            _context.next = 87;
+                            _context.next = 93;
                             break;
                         }
 
                         p = parts[i];
 
                         if (!(p == null)) {
-                            _context.next = 70;
+                            _context.next = 72;
                             break;
                         }
 
-                        return _context.abrupt('continue', 84);
+                        return _context.abrupt('continue', 90);
 
-                    case 70:
+                    case 72:
                         if (p == "b") {
                             imgInfo.bottom = true;
                             imgInfo.y = layerInfo.bottom - docHeight;
@@ -198,6 +213,12 @@ var parse = exports.parse = function () {
                         if (p == "bk") {
                             imgInfo.bk = true;
                         }
+                        if (p == "ip") {
+                            imgInfo.input = true;
+                        }
+                        if (p == "txt") {
+                            imgInfo.txt = true;
+                        }
                         if (p == "bf") {
                             imgInfo.bf = true;
                         }
@@ -209,19 +230,60 @@ var parse = exports.parse = function () {
                         }
                         if (p == "noin") {
                             imgInfo.disableIn = true;
+                        }if (p == "noin") {
+                            imgInfo.disableIn = true;
                         }
                         if (p.indexOf("animate") >= 0) {
+                            inAnimation = _lodash2.default.find(animation, function (c) {
+                                return c.c == '\'in\'';
+                            });
+
                             if (!imgInfo.disableIn) {
+                                if (!inAnimation) {
+                                    inAnimation = {};
+                                    animation.push(inAnimation);
+                                }
                                 ps = p.split('(')[1].split(')')[0].split('-');
 
-                                if (ps.length > 1) animation[0].d = ~~ps[1];
-                                if (ps.length > 2) animation[0].i = ~~ps[2];
-                                if (ps.length > 0) animation[0].t = '\'' + ps[0] + '\'';
+                                if (ps.length > 1) inAnimation.d = ~~ps[1];
+                                if (ps.length > 2) inAnimation.i = ~~ps[2];
+                                if (ps.length > 0) inAnimation.t = '\'' + ps[0] + '\'';
                                 if (ps.length > 3) if (ps[3] == "infinite") {
-                                    animation[0].infinite = true;
+                                    inAnimation.infinite = true;
                                 }
+                                inAnimation.c = '\'in\'';
                             } else {
-                                animation = [];
+                                _lodash2.default.remove(animation, function (c) {
+                                    return c.c == '\'in\'';
+                                });
+                            }
+                        }
+                        if (p.indexOf("waitanimate") >= 0) {
+                            waitAnimation = _lodash2.default.find(animation, function (c) {
+                                return c.c == '\'out\'';
+                            });
+
+                            if (!imgInfo.disableIn) {
+                                if (!waitAnimation) {
+                                    waitAnimation = {};
+                                    animation.push(waitAnimation);
+                                }
+                                ps = p.split('(')[1].split(')')[0].split('-');
+
+                                if (ps.length > 1) waitAnimation.d = ~~ps[1];
+                                if (ps.length > 2) waitAnimation.i = ~~ps[2];
+                                if (ps.length > 0) waitAnimation.t = '\'' + ps[0] + '\'';
+                                if (ps.length > 3) if (ps[3] == "infinite") {
+                                    waitAnimation.infinite = true;
+                                }
+                                if (ps.length > 4) if (ps[4] != "") {
+                                    waitAnimation.id = ps[4];
+                                }
+                                waitAnimation.c = '\'out\'';
+                            } else {
+                                _lodash2.default.remove(animation, function (c) {
+                                    return c.c == '\'out\'';
+                                });
                             }
                         }
                         imgInfo.animation = animation;
@@ -237,14 +299,14 @@ var parse = exports.parse = function () {
                         }
                         imgInfo.code = code;
 
-                    case 84:
+                    case 90:
                         i++;
-                        _context.next = 66;
+                        _context.next = 68;
                         break;
 
-                    case 87:
+                    case 93:
                         if (!imgInfo.bk) {
-                            _context.next = 97;
+                            _context.next = 103;
                             break;
                         }
 
@@ -252,11 +314,11 @@ var parse = exports.parse = function () {
                         if (!_fs2.default.existsSync("cltmp")) {
                             _fs2.default.mkdirSync("cltmp");
                         }
-                        _context.next = 92;
+                        _context.next = 98;
                         return layer.saveAsPng("cltmp/" + "bk.png");
 
-                    case 92:
-                        _context.next = 94;
+                    case 98:
+                        _context.next = 100;
                         return new Promise(function (resolve) {
                             getColors("cltmp/" + "bk.png").then(function (colors) {
                                 colors = colors.map(function (color) {
@@ -267,82 +329,120 @@ var parse = exports.parse = function () {
                             });
                         });
 
-                    case 94:
+                    case 100:
                         pageBackground = _context.sent;
 
                         deleteFolder("cltmp");
-                        return _context.abrupt('continue', 109);
+                        return _context.abrupt('continue', 129);
 
-                    case 97:
-                        if (!imgInfo.global) {
-                            _context.next = 104;
+                    case 103:
+                        if (!imgInfo.input) {
+                            _context.next = 116;
                             break;
                         }
 
-                        _context.next = 100;
+                        deleteFolder("cltmp");
+                        if (!_fs2.default.existsSync("cltmp")) {
+                            _fs2.default.mkdirSync("cltmp");
+                        }
+
+                        _context.next = 108;
+                        return layer.saveAsPng("cltmp/input.png");
+
+                    case 108:
+                        _context.next = 110;
+                        return new Promise(function (resolve) {
+                            getColors("cltmp/" + "input.png").then(function (colors) {
+                                colors = colors.map(function (color) {
+                                    return color.hex();
+                                });
+                                var index = ~~(colors.length / 2);
+                                resolve(colors[index]);
+                            });
+                        });
+
+                    case 110:
+                        inputColor = _context.sent;
+
+                        imgInfo.inputColor = inputColor;
+                        imgInfo.inputSize = sizeOf("cltmp/input.png");
+                        deleteFolder("cltmp");
+                        imgs.push(imgInfo);
+                        return _context.abrupt('continue', 129);
+
+                    case 116:
+                        if (imgInfo.txt) {
+                            imgInfo.layer = layer.export();
+                        }
+
+                        if (!imgInfo.global) {
+                            _context.next = 124;
+                            break;
+                        }
+
+                        _context.next = 120;
                         return layer.saveAsPng("sources/" + "global-" + imgInfo.name + ".png");
 
-                    case 100:
+                    case 120:
                         imgInfo.fileName = "global-" + imgInfo.name + ".png";
                         if (!globaled.has(imgInfo.fileName)) {
                             globaled.set(imgInfo.fileName, "added");
                             packages.push({ n: imgInfo.fileName, w: imgInfo.width, h: imgInfo.height });
                         }
-
-                        _context.next = 108;
+                        _context.next = 128;
                         break;
 
-                    case 104:
-                        _context.next = 106;
+                    case 124:
+                        _context.next = 126;
                         return layer.saveAsPng("sources/" + pagename + "-" + imgInfo.name + ".png");
 
-                    case 106:
+                    case 126:
                         imgInfo.fileName = pagename + "-" + imgInfo.name + ".png";
                         packages.push({ n: imgInfo.fileName, w: imgInfo.width, h: imgInfo.height });
 
-                    case 108:
+                    case 128:
                         imgs.push(imgInfo);
 
-                    case 109:
+                    case 129:
                         _iteratorNormalCompletion2 = true;
                         _context.next = 23;
                         break;
 
-                    case 112:
-                        _context.next = 118;
+                    case 132:
+                        _context.next = 138;
                         break;
 
-                    case 114:
-                        _context.prev = 114;
+                    case 134:
+                        _context.prev = 134;
                         _context.t1 = _context['catch'](21);
                         _didIteratorError2 = true;
                         _iteratorError2 = _context.t1;
 
-                    case 118:
-                        _context.prev = 118;
-                        _context.prev = 119;
+                    case 138:
+                        _context.prev = 138;
+                        _context.prev = 139;
 
                         if (!_iteratorNormalCompletion2 && _iterator2.return) {
                             _iterator2.return();
                         }
 
-                    case 121:
-                        _context.prev = 121;
+                    case 141:
+                        _context.prev = 141;
 
                         if (!_didIteratorError2) {
-                            _context.next = 124;
+                            _context.next = 144;
                             break;
                         }
 
                         throw _iteratorError2;
 
-                    case 124:
-                        return _context.finish(121);
+                    case 144:
+                        return _context.finish(141);
 
-                    case 125:
-                        return _context.finish(118);
+                    case 145:
+                        return _context.finish(138);
 
-                    case 126:
+                    case 146:
                         //console.log(pageBackground);
                         pages.push({
                             pageName: pagename,
@@ -350,46 +450,46 @@ var parse = exports.parse = function () {
                             bk: pageBackground
                         });
 
-                    case 127:
+                    case 147:
                         _iteratorNormalCompletion = true;
                         _context.next = 9;
                         break;
 
-                    case 130:
-                        _context.next = 136;
+                    case 150:
+                        _context.next = 156;
                         break;
 
-                    case 132:
-                        _context.prev = 132;
+                    case 152:
+                        _context.prev = 152;
                         _context.t2 = _context['catch'](7);
                         _didIteratorError = true;
                         _iteratorError = _context.t2;
 
-                    case 136:
-                        _context.prev = 136;
-                        _context.prev = 137;
+                    case 156:
+                        _context.prev = 156;
+                        _context.prev = 157;
 
                         if (!_iteratorNormalCompletion && _iterator.return) {
                             _iterator.return();
                         }
 
-                    case 139:
-                        _context.prev = 139;
+                    case 159:
+                        _context.prev = 159;
 
                         if (!_didIteratorError) {
-                            _context.next = 142;
+                            _context.next = 162;
                             break;
                         }
 
                         throw _iteratorError;
 
-                    case 142:
-                        return _context.finish(139);
+                    case 162:
+                        return _context.finish(159);
 
-                    case 143:
-                        return _context.finish(136);
+                    case 163:
+                        return _context.finish(156);
 
-                    case 144:
+                    case 164:
                         _fs2.default.writeFileSync("pages.json", JSON.stringify(pages));
                         console.log("Files Cutted");
                         //var packagesjsFileContent = "var files = " + JSON.stringify(packages);
@@ -404,12 +504,12 @@ var parse = exports.parse = function () {
                         codes();
                         framework();
 
-                    case 149:
+                    case 169:
                     case 'end':
                         return _context.stop();
                 }
             }
-        }, _callee, this, [[7, 132, 136, 144], [21, 114, 118, 126], [36, 40, 44, 52], [45,, 47, 51], [119,, 121, 125], [137,, 139, 143]]);
+        }, _callee, this, [[7, 152, 156, 164], [21, 134, 138, 146], [36, 40, 44, 52], [45,, 47, 51], [139,, 141, 145], [157,, 159, 163]]);
     }));
 
     return function parse(_x) {
@@ -564,9 +664,20 @@ function codes(pagename) {
                     //var ani = [{d:0.5,i:1,t:"'fadeIn'", c:"'in'"}];
                     html += '    <!-- ' + img.comment + ' -->\n';
                     if (!img.bf) {
-                        html += '    <img src="sources/' + img.fileName + '" \n        position="' + JSON.stringify(position).replace(/\"/g, "") + '" \n        ani="' + JSON.stringify(ani).replace(/\"/g, "") + '"\n        class="' + img.name + '"\n        id="' + page.pageName + '-' + img.name + '"\n        />\n';
+                        if (img.input) {
+                            position.width = img.inputSize.width;
+                            position.height = img.inputSize.height;
+                            html += '    <input \n        position="' + JSON.stringify(position).replace(/\"/g, "") + '" \n        ani="' + JSON.stringify(ani).replace(/\"/g, "") + '"\n        class="' + img.name + '"\n        id="' + page.pageName + '-' + img.name + '"\n        style="padding:0;border:0;line-height:' + (position.height + "px") + ';font-size: ' + (position.height - 5 + "px") + '; color:' + img.inputColor + '"\n        />\n';
+                        } else {
+                            html += '    <img src="sources/' + img.fileName + '" \n        position="' + JSON.stringify(position).replace(/\"/g, "") + '" \n        ani="' + JSON.stringify(ani).replace(/\"/g, "") + '"\n        class="' + img.name + '"\n        id="' + page.pageName + '-' + img.name + '"\n        />\n';
+                        }
                     } else {
                         html += '    <div style="background-image: url(\'sources/' + img.fileName + '\');background-size: cover;background-position: center" \n        position="{width:window.innerWidth, height:window.innerHeight}" \n        ani="' + JSON.stringify(ani).replace(/\"/g, "") + '"\n        class="' + img.name + '"\n        id="' + page.pageName + '-' + img.name + '"\n        ></div>\n';
+                    }
+                    if (img.txt) {
+                        position.width = img.layer.width;
+                        position.height = img.layer.height;
+                        html += '    <div \n        style="font-size: ' + (img.layer.text.font.sizes[0] + "px") + '; line-height: 1; color:rgba(' + img.layer.text.font.colors[0][0] + ',' + img.layer.text.font.colors[0][1] + ',' + img.layer.text.font.colors[0][2] + ',' + img.layer.text.font.colors[0][3] / 255 + ')"\n        position="' + JSON.stringify(position).replace(/\"/g, "") + '" \n        ani="' + JSON.stringify(ani).replace(/\"/g, "") + '"\n        class="' + img.name + '"\n        id="' + page.pageName + '-' + img.name + '-text"\n        fontInfo="' + JSON.stringify(img.layer.text.font.sizes) + '-' + JSON.stringify(img.layer.text.font.colors) + '"\n        >' + img.layer.text.value + '</div>\n';
                     }
                     var customJS = "";
                     if (img.code) {
@@ -582,6 +693,9 @@ function codes(pagename) {
                                 break;
                             case "jump":
                                 customJS = 'KSApp.pageService.gotoPage(' + img.code.code + ')';
+                                break;
+                            case "animate":
+                                customJS = 'KSApp.animator.runWaitAnimation(\'.' + img.name + '\', null, function () {\n\n                }, false);';
                                 break;
                         }
                     }
