@@ -22,7 +22,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var program = require('commander');
 
 
-program.version('1.0.5');
+program.version('1.0.6');
 program.command('parse').description('parse psd file').option('-p, --path', 'path of psd files').action(function () {
     var _ref = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee(options) {
         var path;
