@@ -18,7 +18,7 @@ var _asyncToGenerator3 = _interopRequireDefault(_asyncToGenerator2);
 
 var parse = exports.parse = function () {
     var _ref = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee(dir) {
-        var files, packages, globaled, pages, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, file, pagename, psd, docHeight, imgs, pageBackground, _iteratorNormalCompletion2, _didIteratorError2, _iteratorError2, _iterator2, _step2, layer, layerInfo, animation, code, parts, py, name, _iteratorNormalCompletion3, _didIteratorError3, _iteratorError3, _iterator3, _step3, p, imgInfo, i, inAnimation, ps, waitAnimation, inputColor;
+        var files, packages, globaled, pages, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, file, pagename, isLoading, psd, docHeight, imgs, pageBackground, _iteratorNormalCompletion2, _didIteratorError2, _iteratorError2, _iterator2, _step2, layer, layerInfo, animation, code, parts, py, name, _iteratorNormalCompletion3, _didIteratorError3, _iteratorError3, _iterator3, _step3, p, imgInfo, i, inAnimation, ps, waitAnimation, inputColor;
 
         return _regenerator2.default.wrap(function _callee$(_context) {
             while (1) {
@@ -41,12 +41,13 @@ var parse = exports.parse = function () {
 
                     case 9:
                         if (_iteratorNormalCompletion = (_step = _iterator.next()).done) {
-                            _context.next = 150;
+                            _context.next = 152;
                             break;
                         }
 
                         file = _step.value;
                         pagename = file.replace("psd/", "").replace(".psd", "");
+                        isLoading = pagename == "loading" ? true : false;
 
                         if (!_fs2.default.existsSync("sources")) {
                             _fs2.default.mkdirSync("sources/");
@@ -76,25 +77,25 @@ var parse = exports.parse = function () {
                         _iteratorNormalCompletion2 = true;
                         _didIteratorError2 = false;
                         _iteratorError2 = undefined;
-                        _context.prev = 21;
+                        _context.prev = 22;
                         _iterator2 = psd.tree().descendants()[Symbol.iterator]();
 
-                    case 23:
+                    case 24:
                         if (_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done) {
-                            _context.next = 132;
+                            _context.next = 134;
                             break;
                         }
 
                         layer = _step2.value;
 
                         if (!(layer.name.indexOf("_") < 0)) {
-                            _context.next = 27;
+                            _context.next = 28;
                             break;
                         }
 
-                        return _context.abrupt('continue', 129);
+                        return _context.abrupt('continue', 131);
 
-                    case 27:
+                    case 28:
                         layerInfo = layer.export();
                         animation = [{ d: 0.5, i: 1, t: '\'fadeIn\'', c: '\'in\'' }];
                         code = {};
@@ -106,47 +107,47 @@ var parse = exports.parse = function () {
                         _iteratorNormalCompletion3 = true;
                         _didIteratorError3 = false;
                         _iteratorError3 = undefined;
-                        _context.prev = 36;
+                        _context.prev = 37;
 
                         for (_iterator3 = py[Symbol.iterator](); !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
                             p = _step3.value;
 
                             name += p;
                         }
-                        _context.next = 44;
+                        _context.next = 45;
                         break;
 
-                    case 40:
-                        _context.prev = 40;
-                        _context.t0 = _context['catch'](36);
+                    case 41:
+                        _context.prev = 41;
+                        _context.t0 = _context['catch'](37);
                         _didIteratorError3 = true;
                         _iteratorError3 = _context.t0;
 
-                    case 44:
-                        _context.prev = 44;
+                    case 45:
                         _context.prev = 45;
+                        _context.prev = 46;
 
                         if (!_iteratorNormalCompletion3 && _iterator3.return) {
                             _iterator3.return();
                         }
 
-                    case 47:
-                        _context.prev = 47;
+                    case 48:
+                        _context.prev = 48;
 
                         if (!_didIteratorError3) {
-                            _context.next = 50;
+                            _context.next = 51;
                             break;
                         }
 
                         throw _iteratorError3;
 
-                    case 50:
-                        return _context.finish(47);
-
                     case 51:
-                        return _context.finish(44);
+                        return _context.finish(48);
 
                     case 52:
+                        return _context.finish(45);
+
+                    case 53:
                         imgInfo = {
                             id: ~~parts[0],
                             name: name,
@@ -157,7 +158,14 @@ var parse = exports.parse = function () {
                         };
 
                         imgInfo.x = layerInfo.left;
+
                         imgInfo.y = layerInfo.top;
+                        if (isLoading) {
+                            imgInfo.loadingX = layerInfo.left / 750;
+                            imgInfo.loadingY = layerInfo.top / docHeight;
+                            imgInfo.loadingWidth = layerInfo.width / 750;
+                            imgInfo.loadingHeight = layerInfo.height / docHeight;
+                        }
                         imgInfo.cx = false;
                         imgInfo.cy = false;
                         imgInfo.bottom = false;
@@ -172,22 +180,22 @@ var parse = exports.parse = function () {
                         imgInfo.backcolor = "'transparent'";
                         i = 1;
 
-                    case 68:
+                    case 70:
                         if (!(i < parts.length - 1)) {
-                            _context.next = 93;
+                            _context.next = 95;
                             break;
                         }
 
                         p = parts[i];
 
                         if (!(p == null)) {
-                            _context.next = 72;
+                            _context.next = 74;
                             break;
                         }
 
-                        return _context.abrupt('continue', 90);
+                        return _context.abrupt('continue', 92);
 
-                    case 72:
+                    case 74:
                         if (p == "b") {
                             imgInfo.bottom = true;
                             imgInfo.y = layerInfo.bottom - docHeight;
@@ -201,6 +209,7 @@ var parse = exports.parse = function () {
                             //console.log(layerInfo)
                             //console.log((layerInfo.top + layerInfo.bottom)/2)
                             imgInfo.y = (layerInfo.top + layerInfo.bottom) / 2 - docHeight / 2;
+
                             //console.log(imgInfo)
                         }
                         if (p == "r") {
@@ -299,14 +308,14 @@ var parse = exports.parse = function () {
                         }
                         imgInfo.code = code;
 
-                    case 90:
+                    case 92:
                         i++;
-                        _context.next = 68;
+                        _context.next = 70;
                         break;
 
-                    case 93:
+                    case 95:
                         if (!imgInfo.bk) {
-                            _context.next = 103;
+                            _context.next = 105;
                             break;
                         }
 
@@ -314,11 +323,11 @@ var parse = exports.parse = function () {
                         if (!_fs2.default.existsSync("cltmp")) {
                             _fs2.default.mkdirSync("cltmp");
                         }
-                        _context.next = 98;
+                        _context.next = 100;
                         return layer.saveAsPng("cltmp/" + "bk.png");
 
-                    case 98:
-                        _context.next = 100;
+                    case 100:
+                        _context.next = 102;
                         return new Promise(function (resolve) {
                             getColors("cltmp/" + "bk.png").then(function (colors) {
                                 colors = colors.map(function (color) {
@@ -329,15 +338,15 @@ var parse = exports.parse = function () {
                             });
                         });
 
-                    case 100:
+                    case 102:
                         pageBackground = _context.sent;
 
                         deleteFolder("cltmp");
-                        return _context.abrupt('continue', 129);
+                        return _context.abrupt('continue', 131);
 
-                    case 103:
+                    case 105:
                         if (!imgInfo.input) {
-                            _context.next = 116;
+                            _context.next = 118;
                             break;
                         }
 
@@ -346,11 +355,11 @@ var parse = exports.parse = function () {
                             _fs2.default.mkdirSync("cltmp");
                         }
 
-                        _context.next = 108;
+                        _context.next = 110;
                         return layer.saveAsPng("cltmp/input.png");
 
-                    case 108:
-                        _context.next = 110;
+                    case 110:
+                        _context.next = 112;
                         return new Promise(function (resolve) {
                             getColors("cltmp/" + "input.png").then(function (colors) {
                                 colors = colors.map(function (color) {
@@ -361,135 +370,137 @@ var parse = exports.parse = function () {
                             });
                         });
 
-                    case 110:
+                    case 112:
                         inputColor = _context.sent;
 
                         imgInfo.inputColor = inputColor;
                         imgInfo.inputSize = sizeOf("cltmp/input.png");
                         deleteFolder("cltmp");
                         imgs.push(imgInfo);
-                        return _context.abrupt('continue', 129);
+                        return _context.abrupt('continue', 131);
 
-                    case 116:
+                    case 118:
                         if (imgInfo.txt) {
                             imgInfo.layer = layer.export();
                         }
 
                         if (!imgInfo.global) {
-                            _context.next = 124;
+                            _context.next = 126;
                             break;
                         }
 
-                        _context.next = 120;
+                        _context.next = 122;
                         return layer.saveAsPng("sources/" + "global-" + imgInfo.name + ".png");
 
-                    case 120:
+                    case 122:
                         imgInfo.fileName = "global-" + imgInfo.name + ".png";
                         if (!globaled.has(imgInfo.fileName)) {
                             globaled.set(imgInfo.fileName, "added");
                             packages.push({ n: imgInfo.fileName, w: imgInfo.width, h: imgInfo.height });
                         }
-                        _context.next = 128;
+                        _context.next = 130;
                         break;
 
-                    case 124:
-                        _context.next = 126;
+                    case 126:
+                        _context.next = 128;
                         return layer.saveAsPng("sources/" + pagename + "-" + imgInfo.name + ".png");
 
-                    case 126:
+                    case 128:
                         imgInfo.fileName = pagename + "-" + imgInfo.name + ".png";
                         packages.push({ n: imgInfo.fileName, w: imgInfo.width, h: imgInfo.height });
 
-                    case 128:
+                    case 130:
                         imgs.push(imgInfo);
 
-                    case 129:
+                    case 131:
                         _iteratorNormalCompletion2 = true;
-                        _context.next = 23;
-                        break;
-
-                    case 132:
-                        _context.next = 138;
+                        _context.next = 24;
                         break;
 
                     case 134:
-                        _context.prev = 134;
-                        _context.t1 = _context['catch'](21);
+                        _context.next = 140;
+                        break;
+
+                    case 136:
+                        _context.prev = 136;
+                        _context.t1 = _context['catch'](22);
                         _didIteratorError2 = true;
                         _iteratorError2 = _context.t1;
 
-                    case 138:
-                        _context.prev = 138;
-                        _context.prev = 139;
+                    case 140:
+                        _context.prev = 140;
+                        _context.prev = 141;
 
                         if (!_iteratorNormalCompletion2 && _iterator2.return) {
                             _iterator2.return();
                         }
 
-                    case 141:
-                        _context.prev = 141;
+                    case 143:
+                        _context.prev = 143;
 
                         if (!_didIteratorError2) {
-                            _context.next = 144;
+                            _context.next = 146;
                             break;
                         }
 
                         throw _iteratorError2;
 
-                    case 144:
-                        return _context.finish(141);
-
-                    case 145:
-                        return _context.finish(138);
-
                     case 146:
+                        return _context.finish(143);
+
+                    case 147:
+                        return _context.finish(140);
+
+                    case 148:
                         //console.log(pageBackground);
                         pages.push({
                             pageName: pagename,
                             images: _lodash2.default.reverse(imgs),
-                            bk: pageBackground
+                            bk: pageBackground,
+                            width: 750,
+                            height: docHeight
                         });
 
-                    case 147:
+                    case 149:
                         _iteratorNormalCompletion = true;
                         _context.next = 9;
                         break;
 
-                    case 150:
-                        _context.next = 156;
+                    case 152:
+                        _context.next = 158;
                         break;
 
-                    case 152:
-                        _context.prev = 152;
+                    case 154:
+                        _context.prev = 154;
                         _context.t2 = _context['catch'](7);
                         _didIteratorError = true;
                         _iteratorError = _context.t2;
 
-                    case 156:
-                        _context.prev = 156;
-                        _context.prev = 157;
+                    case 158:
+                        _context.prev = 158;
+                        _context.prev = 159;
 
                         if (!_iteratorNormalCompletion && _iterator.return) {
                             _iterator.return();
                         }
 
-                    case 159:
-                        _context.prev = 159;
+                    case 161:
+                        _context.prev = 161;
 
                         if (!_didIteratorError) {
-                            _context.next = 162;
+                            _context.next = 164;
                             break;
                         }
 
                         throw _iteratorError;
 
-                    case 162:
-                        return _context.finish(159);
-
-                    case 163:
-                        return _context.finish(156);
-
                     case 164:
+                        return _context.finish(161);
+
+                    case 165:
+                        return _context.finish(158);
+
+                    case 166:
                         _fs2.default.writeFileSync("pages.json", JSON.stringify(pages));
                         console.log("Files Cutted");
                         //var packagesjsFileContent = "var files = " + JSON.stringify(packages);
@@ -504,12 +515,12 @@ var parse = exports.parse = function () {
                         codes();
                         framework();
 
-                    case 169:
+                    case 171:
                     case 'end':
                         return _context.stop();
                 }
             }
-        }, _callee, this, [[7, 152, 156, 164], [21, 134, 138, 146], [36, 40, 44, 52], [45,, 47, 51], [139,, 141, 145], [157,, 159, 163]]);
+        }, _callee, this, [[7, 154, 158, 166], [22, 136, 140, 148], [37, 41, 45, 53], [46,, 48, 52], [141,, 143, 147], [159,, 161, 165]]);
     }));
 
     return function parse(_x) {
@@ -518,6 +529,7 @@ var parse = exports.parse = function () {
 }();
 
 exports.sources = sources;
+exports.codesLoading = codesLoading;
 exports.codes = codes;
 exports.framework = framework;
 exports.clean = clean;
@@ -547,13 +559,17 @@ var sizeOf = require('image-size');
 var imagemin = require('imagemin');
 var request = require('request');
 var unzip = require('unzip');
+var cheerio = require('cheerio');
 var https = require('https');
 var AdmZip = require('adm-zip');
-var beautify = require('js-beautify').js_beautify;
+var beautifyInstance = require('js-beautify');
+var beautify = beautifyInstance.js_beautify;
+var beautify_html = beautifyInstance.html;
 var copydir = require('copy-dir');
 var getColors = require('get-image-colors');
 var imageminOptipng = require('imagemin-optipng');
 
+var loadingPage = null;
 var deleteFolder = module.exports.deleteFolder = function (path) {
     var files = [];
     if (_fs2.default.existsSync(path)) {
@@ -609,6 +625,71 @@ function sources() {
     _fs2.default.writeFileSync("packages.js", packagesjsFileContent);
     console.log("Arrange packages file complete");
 }
+function codesLoading(page) {
+    var indexFile = _fs2.default.readFileSync('index.html', 'utf-8');
+    var $ = cheerio.load(indexFile);
+    $("#loadingPanel").css("width", "100%").css("height", "100%");
+
+    var html = "";
+    var _iteratorNormalCompletion5 = true;
+    var _didIteratorError5 = false;
+    var _iteratorError5 = undefined;
+
+    try {
+        for (var _iterator5 = page.images[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
+            var img = _step5.value;
+
+            var position = {
+                x: img.x,
+                y: img.y,
+                alpha: img.alpha,
+                cx: img.cx,
+                cy: img.cy,
+                bottom: img.bottom,
+                right: img.right,
+                scale: img.scale,
+                per: img.per,
+                backcolor: img.backcolor
+            };
+            img.loadingX = img.loadingX * 100;
+            img.loadingY = img.loadingY * 100;
+            img.loadingWidth = img.loadingWidth * 100;
+            img.loadingHeight = img.loadingHeight * 100;
+            var ani = img.animation;
+            //var ani = [{d:0.5,i:1,t:"'fadeIn'", c:"'in'"}];
+            html += '    <!-- ' + img.comment + ' -->\n';
+            if (!img.bf) {
+                html += '    <img src="sources/' + img.fileName + '" \n        style="width:' + (img.loadingWidth + "%") + ';height:' + (img.loadingHeight + "%") + ';left:' + (img.loadingX + "%!important") + ';top:' + (img.loadingY + "%!important") + ';position:fixed;display:block!important;"\n        class="' + img.name + '"\n        id="' + page.pageName + '-' + img.name + '"\n        />\n';
+            } else {
+                html += '    <div style="background-image: url(\'sources/' + img.fileName + '\');background-size: cover;background-position: center;width:100%;height:100%;position:fixed;display:block!important;" \n        class="' + img.name + '"\n        id="' + page.pageName + '-' + img.name + '"\n        ></div>\n';
+            }
+            if (img.txt) {
+                position.width = img.layer.width;
+                position.height = img.layer.height;
+                html += '    <div \n        style="font-size: ' + (img.loadingHeight + "%") + '; width:' + (img.loadingWidth + "%") + ';height:' + (img.loadingHeight + "%") + ';position:fixed;left:' + (img.loadingX + "%!important") + ';top:' + (img.loadingY + "%!important") + '; line-height: 1; color:rgba(' + img.layer.text.font.colors[0][0] + ',' + img.layer.text.font.colors[0][1] + ',' + img.layer.text.font.colors[0][2] + ',' + img.layer.text.font.colors[0][3] / 255 + ');display:block!important;"\n       \n        class="' + img.name + '"\n        id="' + page.pageName + '-' + img.name + '-text"\n        fontInfo="' + JSON.stringify(img.layer.text.font.sizes) + '-' + JSON.stringify(img.layer.text.font.colors) + '"\n        >' + img.layer.text.value + '</div>\n';
+            }
+        }
+    } catch (err) {
+        _didIteratorError5 = true;
+        _iteratorError5 = err;
+    } finally {
+        try {
+            if (!_iteratorNormalCompletion5 && _iterator5.return) {
+                _iterator5.return();
+            }
+        } finally {
+            if (_didIteratorError5) {
+                throw _iteratorError5;
+            }
+        }
+    }
+
+    $("#loadingPanel").html(html);
+    var html = $.html().replace(/\&apos;/g, "'");
+    html = beautify_html(html);
+    _fs2.default.writeFileSync("./index.html", html);
+    console.log("loading page fin");
+}
 function codes(pagename) {
     if (pagename && pagename.length == null) {
         pagename = null;
@@ -617,22 +698,31 @@ function codes(pagename) {
     var json = _fs2.default.readFileSync(jsonfile, 'utf-8');
     var pages = JSON.parse(json);
     var screens = [];
-    var _iteratorNormalCompletion5 = true;
-    var _didIteratorError5 = false;
-    var _iteratorError5 = undefined;
+    var _iteratorNormalCompletion6 = true;
+    var _didIteratorError6 = false;
+    var _iteratorError6 = undefined;
 
     try {
-        for (var _iterator5 = pages[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
-            var page = _step5.value;
+        for (var _iterator6 = pages[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
+            var page = _step6.value;
 
             var pageType = page.pageName.indexOf("page") >= 0 ? 'page' : 'widget';
-            screens.push({
-                page: 'views/' + page.pageName + '.html',
-                id: '' + page.pageName,
-                controller: 'controllers/' + page.pageName + '.js',
-                start: false,
-                type: pageType
-            });
+            if (page.pageName == "loading") {
+                pageType = "loading";
+            }
+            if (pageType != "loading") {
+                screens.push({
+                    page: 'views/' + page.pageName + '.html',
+                    id: '' + page.pageName,
+                    controller: 'controllers/' + page.pageName + '.js',
+                    start: false,
+                    type: pageType
+                });
+            } else {
+                //loadingPage = page;
+                codesLoading(page);
+                continue;
+            }
             if (pagename) {
                 if (pagename != page.pageName) {
                     continue;
@@ -640,13 +730,13 @@ function codes(pagename) {
             }
             var html = "";
             var js = "";
-            var _iteratorNormalCompletion6 = true;
-            var _didIteratorError6 = false;
-            var _iteratorError6 = undefined;
+            var _iteratorNormalCompletion7 = true;
+            var _didIteratorError7 = false;
+            var _iteratorError7 = undefined;
 
             try {
-                for (var _iterator6 = page.images[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
-                    var img = _step6.value;
+                for (var _iterator7 = page.images[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {
+                    var img = _step7.value;
 
                     var position = {
                         x: img.x,
@@ -705,16 +795,16 @@ function codes(pagename) {
                     }
                 }
             } catch (err) {
-                _didIteratorError6 = true;
-                _iteratorError6 = err;
+                _didIteratorError7 = true;
+                _iteratorError7 = err;
             } finally {
                 try {
-                    if (!_iteratorNormalCompletion6 && _iterator6.return) {
-                        _iterator6.return();
+                    if (!_iteratorNormalCompletion7 && _iterator7.return) {
+                        _iterator7.return();
                     }
                 } finally {
-                    if (_didIteratorError6) {
-                        throw _iteratorError6;
+                    if (_didIteratorError7) {
+                        throw _iteratorError7;
                     }
                 }
             }
@@ -739,16 +829,16 @@ function codes(pagename) {
             //console.log(viewStr);
         }
     } catch (err) {
-        _didIteratorError5 = true;
-        _iteratorError5 = err;
+        _didIteratorError6 = true;
+        _iteratorError6 = err;
     } finally {
         try {
-            if (!_iteratorNormalCompletion5 && _iterator5.return) {
-                _iterator5.return();
+            if (!_iteratorNormalCompletion6 && _iterator6.return) {
+                _iterator6.return();
             }
         } finally {
-            if (_didIteratorError5) {
-                throw _iteratorError5;
+            if (_didIteratorError6) {
+                throw _iteratorError6;
             }
         }
     }
@@ -759,6 +849,10 @@ function codes(pagename) {
 }
 
 function framework() {
+    if (_fs2.default.existsSync("index.html")) {
+        console.log("will not download framework code");
+        return;
+    }
     deleteFolder("tmp");
     if (!_fs2.default.existsSync("tmp")) {
         _fs2.default.mkdirSync("tmp");

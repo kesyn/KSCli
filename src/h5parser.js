@@ -10,14 +10,18 @@ var sizeOf = require('image-size');
 const imagemin = require('imagemin');
 var request = require('request');
 var unzip = require('unzip');
+const cheerio = require('cheerio');
 var https = require('https');
 var AdmZip = require('adm-zip');
-var beautify = require('js-beautify').js_beautify;
+var beautifyInstance = require('js-beautify');
+var beautify = beautifyInstance.js_beautify
+var beautify_html = beautifyInstance.html;
 var copydir = require('copy-dir');
 const getColors = require('get-image-colors')
 const imageminOptipng = require('imagemin-optipng');
 import _ from 'lodash'
 import * as PSD from 'psd'
+var loadingPage = null;
 var deleteFolder = module.exports.deleteFolder= function(path) {
     var files = [];
     if( fs.existsSync(path) ) {
@@ -49,6 +53,7 @@ export async function parse(dir){
     // }
     for(var file of files){
         var pagename = file.replace("psd/", "").replace(".psd", "");
+        var isLoading = pagename=="loading"?true:false;
         if(!fs.existsSync("sources")){
             fs.mkdirSync("sources/");
         }
@@ -94,7 +99,14 @@ export async function parse(dir){
                 pageName: pagename
             }
             imgInfo.x = layerInfo.left;
+
             imgInfo.y = layerInfo.top;
+            if(isLoading){
+                imgInfo.loadingX = layerInfo.left/750;
+                imgInfo.loadingY = layerInfo.top/docHeight;
+                imgInfo.loadingWidth = layerInfo.width/750;
+                imgInfo.loadingHeight = layerInfo.height/docHeight;
+            }
             imgInfo.cx = false;
             imgInfo.cy = false;
             imgInfo.bottom = false;
@@ -113,21 +125,25 @@ export async function parse(dir){
                 if(p == "b"){
                     imgInfo.bottom = true;
                     imgInfo.y = layerInfo.bottom - docHeight;
+
                 }
                 if(p == "x"){
                     imgInfo.cx = true;
                     imgInfo.x = (layerInfo.left + layerInfo.right)/2 - 750/2;
+
                 }
                 if(p == "y"){
                     imgInfo.cy = true;
                     //console.log(layerInfo)
                     //console.log((layerInfo.top + layerInfo.bottom)/2)
                     imgInfo.y = (layerInfo.top + layerInfo.bottom)/2 - docHeight/2;
+
                     //console.log(imgInfo)
                 }
                 if(p == "r"){
                     imgInfo.right = true;
                     imgInfo.x = layerInfo.right - 750;
+
                 }
                 if(p == "bt"){
                     imgInfo.button = true;
@@ -277,7 +293,9 @@ export async function parse(dir){
         pages.push({
             pageName: pagename,
             images: _.reverse(imgs),
-            bk: pageBackground
+            bk: pageBackground,
+            width: 750,
+            height: docHeight
         });
     }
     fs.writeFileSync("pages.json", JSON.stringify(pages));
@@ -308,6 +326,64 @@ export function sources(){
     fs.writeFileSync("packages.js", packagesjsFileContent);
     console.log("Arrange packages file complete");
 }
+export function codesLoading(page){
+    var indexFile = fs.readFileSync('index.html', 'utf-8');
+    var $ = cheerio.load(indexFile);
+    $("#loadingPanel").css("width", "100%").css("height", "100%");
+
+    var html = "";
+    for(var img of page.images){
+        var position = {
+            x: img.x,
+            y: img.y,
+            alpha: img.alpha,
+            cx: img.cx,
+            cy: img.cy,
+            bottom: img.bottom,
+            right: img.right,
+            scale: img.scale,
+            per: img.per,
+            backcolor: img.backcolor
+        };
+        img.loadingX = (img.loadingX*100)
+        img.loadingY = (img.loadingY*100)
+        img.loadingWidth = (img.loadingWidth*100)
+        img.loadingHeight = (img.loadingHeight*100)
+        var ani = img.animation;
+        //var ani = [{d:0.5,i:1,t:"'fadeIn'", c:"'in'"}];
+        html += `    <!-- ${img.comment} -->
+`;
+        if(!img.bf) {
+                html += `    <img src="sources/${img.fileName}" 
+        style="width:${img.loadingWidth+"%"};height:${img.loadingHeight+"%"};left:${img.loadingX+"%!important"};top:${img.loadingY+"%!important"};position:fixed;display:block!important;"
+        class="${img.name}"
+        id="${page.pageName}-${img.name}"
+        />\n`
+        }
+        else{
+            html += `    <div style="background-image: url('sources/${img.fileName}');background-size: cover;background-position: center;width:100%;height:100%;position:fixed;display:block!important;" 
+        class="${img.name}"
+        id="${page.pageName}-${img.name}"
+        ></div>\n`
+        }
+        if(img.txt){
+            position.width = img.layer.width;
+            position.height = img.layer.height;
+            html += `    <div 
+        style="font-size: ${img.loadingHeight+"%"}; width:${img.loadingWidth+"%"};height:${img.loadingHeight+"%"};position:fixed;left:${img.loadingX+"%!important"};top:${img.loadingY+"%!important"}; line-height: 1; color:rgba(${img.layer.text.font.colors[0][0]},${img.layer.text.font.colors[0][1]},${img.layer.text.font.colors[0][2]},${img.layer.text.font.colors[0][3]/255});display:block!important;"
+       
+        class="${img.name}"
+        id="${page.pageName}-${img.name}-text"
+        fontInfo="${JSON.stringify(img.layer.text.font.sizes)}-${JSON.stringify(img.layer.text.font.colors)}"
+        >${img.layer.text.value}</div>\n`
+        }
+    }
+    $("#loadingPanel").html(html);
+    var html = $.html().replace(/\&apos;/g, "'");
+    html = beautify_html(html);
+    fs.writeFileSync("./index.html", html);
+    console.log("loading page fin")
+}
 export function codes(pagename){
     if(pagename&&pagename.length == null){
         pagename = null;
@@ -318,13 +394,23 @@ export function codes(pagename){
     var screens = [];
     for(var page of pages){
         var pageType = page.pageName.indexOf("page")>=0?'page':'widget';
-        screens.push({
-            page: `views/${page.pageName}.html`,
-            id: `${page.pageName}`,
-            controller: `controllers/${page.pageName}.js`,
-            start: false,
-            type: pageType
-        });
+        if(page.pageName=="loading"){
+            pageType = "loading"
+        }
+        if(pageType!="loading") {
+            screens.push({
+                page: `views/${page.pageName}.html`,
+                id: `${page.pageName}`,
+                controller: `controllers/${page.pageName}.js`,
+                start: false,
+                type: pageType
+            });
+        }
+        else{
+            //loadingPage = page;
+            codesLoading(page)
+            continue;
+        }
         if(pagename){
             if(pagename != page.pageName){
                 continue;
@@ -457,6 +543,10 @@ ${html}
 }
 
 export function framework(){
+    if(fs.existsSync("index.html")){
+        console.log("will not download framework code")
+        return;
+    }
     deleteFolder("tmp");
     if(!fs.existsSync("tmp")){
         fs.mkdirSync("tmp");
